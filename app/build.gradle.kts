@@ -54,10 +54,14 @@ dependencies {
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.compose.foundation)
 
+    // --- IMPORTANTE: Ícones extras para Compose ---
+    implementation("androidx.compose.material:material-icons-extended")
+
+
     // --- Versões (Para facilitar a gestão) ---
     val room_version = "2.6.1"
     val lifecycle_version = "2.7.0"
-    val nav_version = "2.7.5" // ✨ NOVO: Versão de Navegação
+    val nav_version = "2.7.5"
 
     // 1. Room Persistence Library
     implementation("androidx.room:room-runtime:$room_version")
@@ -68,14 +72,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version")
 
-    // 3. Integração Compose com o Lifecycle/ViewModel (Resolve observeAsState)
+    // 3. Integração Compose com o Lifecycle/ViewModel
     implementation("androidx.lifecycle:lifecycle-runtime-compose:$lifecycle_version")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version")
 
-    // 4. Navegação Compose (Resolve NavController, popBackStack, navigation)
-    implementation("androidx.navigation:navigation-compose:$nav_version") // ✨ NOVA DEPENDÊNCIA
+    // 4. Navegação Compose
+    implementation("androidx.navigation:navigation-compose:$nav_version")
 
-    // --- Dependências de Teste (Mantidas) ---
+    // --- Dependências de Teste ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

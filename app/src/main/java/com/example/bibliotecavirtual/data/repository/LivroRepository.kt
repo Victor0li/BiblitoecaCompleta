@@ -8,6 +8,8 @@ class LivroRepository(private val livroDao: LivroDao) {
 
     val allLivros: Flow<List<Livro>> = livroDao.getAll()
     val favoritos: Flow<List<Livro>> = livroDao.getFavorites()
+    val lidos: Flow<List<Livro>> = livroDao.getLidos()
+    val paraLer: Flow<List<Livro>> = livroDao.getParaLer()
 
     fun getLivroById(id: Int): Flow<Livro?> = livroDao.getLivroById(id)
 
@@ -25,6 +27,12 @@ class LivroRepository(private val livroDao: LivroDao) {
 
     suspend fun toggleFavorito(livro: Livro) {
         val updatedLivro = livro.copy(isFavorito = !livro.isFavorito)
+        livroDao.atualizar(updatedLivro)
+    }
+
+    suspend fun toggleLido(livro: Livro) {
+        // Cria uma cópia do livro com o status de leitura invertido
+        val updatedLivro = livro.copy(isLido = !livro.isLido)
         livroDao.atualizar(updatedLivro)
     }
 }

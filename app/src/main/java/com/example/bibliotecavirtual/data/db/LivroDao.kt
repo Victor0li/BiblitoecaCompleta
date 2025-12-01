@@ -16,6 +16,12 @@ interface LivroDao {
     @Query("SELECT * FROM tabela_livros WHERE id = :livroId")
     fun getLivroById(livroId: Int): Flow<Livro?>
 
+    @Query("SELECT * FROM tabela_livros WHERE isLido = 1 ORDER BY titulo ASC")
+    fun getLidos(): Flow<List<Livro>>
+
+    @Query("SELECT * FROM tabela_livros WHERE isLido = 0 ORDER BY titulo ASC")
+    fun getParaLer(): Flow<List<Livro>>
+
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun inserir(livro: Livro)
 

@@ -1,22 +1,24 @@
 package com.example.bibliotecavirtual.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.bibliotecavirtual.data.Livro
 import com.example.bibliotecavirtual.ui.viewmodel.LivroViewModel
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -24,28 +26,32 @@ fun LivroListScreen(navController: NavController, viewModel: LivroViewModel) {
     val livros by viewModel.allLivros.observeAsState(initial = emptyList())
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Minha Biblioteca") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Minha Biblioteca", fontWeight = FontWeight.Bold) }
+            )
+        },
         floatingActionButton = {
-            Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
-                // Botão Favoritos
+            Column(horizontalAlignment = Alignment.End) {
                 FloatingActionButton(
                     onClick = { navController.navigate("favoritos") },
                     modifier = Modifier.padding(bottom = 8.dp),
                     containerColor = MaterialTheme.colorScheme.secondary,
-                    content = { Icon(Icons.Filled.Favorite, contentDescription = "Favoritos") }
-                )
-                // Botão Adicionar
+                ) {
+                    Icon(Icons.Filled.Favorite, contentDescription = "Favoritos")
+                }
                 FloatingActionButton(
                     onClick = { navController.navigate("add_edit/0") },
-                    content = { Icon(Icons.Filled.Add, contentDescription = "Adicionar Livro") }
-                )
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Adicionar Livro")
+                }
             }
         }
     ) { paddingValues ->
         if (livros.isEmpty()) {
-            androidx.compose.foundation.layout.Box(
+            Box(
                 modifier = Modifier.fillMaxSize().padding(paddingValues),
-                contentAlignment = androidx.compose.ui.Alignment.Center
+                contentAlignment = Alignment.Center
             ) {
                 Text("Adicione seu primeiro livro.")
             }
@@ -54,11 +60,70 @@ fun LivroListScreen(navController: NavController, viewModel: LivroViewModel) {
                 modifier = Modifier.fillMaxSize().padding(paddingValues)
             ) {
                 items(livros, key = { it.id }) { livro ->
-                    LivroListItem(
+                    LivroCard(
                         livro = livro,
-                        viewModel = viewModel,
-                        onItemClick = { livroId ->
-                            navController.navigate("detail/$livroId")
+                        onClick = { navController.navigate("detail/${livro.id}") }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun LivroCard(livro: Livro, onClick: () -> Unit) {
+
+    ElevatedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        onClick = onClick
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+
+            // Título
+            Text(
+                livro.titulo,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Autor
+            Text(
+                livro.autor,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Linha de status
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                AssistChip(
+                    onClick = {},
+                    label = {
+                        Text(if (livro.isLido) "LIDO" else "PARA LER")
+                    },
+                    leadingIcon = {
+                        Icon(
+                            if (livro.isLido) Icons.Filled.Check else Icons.Filled.MenuBook,
+                            contentDescription = null
+                        )
+                    }
+                )
+
+                if (livro.isFavorito) {
+                    AssistChip(
+                        onClick = {},
+                        label = { Text("FAVORITO") },
+                        leadingIcon = {
+                            Icon(Icons.Filled.Favorite, contentDescription = null)
                         }
                     )
                 }

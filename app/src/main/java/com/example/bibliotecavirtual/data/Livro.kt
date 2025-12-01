@@ -12,5 +12,6 @@ data class Livro(
     val genre: String,
     val anoPublicacao: Int,
     val description: String,
-    val isFavorito: Boolean = false
+    val isFavorito: Boolean = false,
+    val isLido: Boolean = false
 )

@@ -6,7 +6,8 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.bibliotecavirtual.data.Livro
 
-@Database(entities = [Livro::class], version = 1, exportSchema = false)
+// VERSÃO CORRIGIDA PARA 2
+@Database(entities = [Livro::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun livroDao(): LivroDao
@@ -21,7 +22,10 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "livro_database"
-                ).build()
+                )
+
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

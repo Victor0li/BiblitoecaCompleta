@@ -9,6 +9,8 @@ class LivroViewModel(private val repository: LivroRepository) : ViewModel() {
 
     val allLivros: LiveData<List<Livro>> = repository.allLivros.asLiveData()
     val favoritos: LiveData<List<Livro>> = repository.favoritos.asLiveData()
+    val lidos: LiveData<List<Livro>> = repository.lidos.asLiveData()
+    val paraLer: LiveData<List<Livro>> = repository.paraLer.asLiveData()
 
     fun getLivroById(id: Int): LiveData<Livro?> {
         if (id == 0) return MutableLiveData(null)
@@ -29,5 +31,10 @@ class LivroViewModel(private val repository: LivroRepository) : ViewModel() {
 
     fun toggleFavorito(livro: Livro) = viewModelScope.launch {
         repository.toggleFavorito(livro)
+    }
+
+    fun toggleLido(livro: Livro) = viewModelScope.launch {
+        // Chamando o método do Repository para mudar o status
+        repository.toggleLido(livro)
     }
 }
