@@ -8,11 +8,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
@@ -28,56 +25,45 @@ fun AddEditScreen(
 ) {
     val isEditing = livroId != 0
 
-    // --- CORREÇÃO: Usa a mesma arquitetura da DetailScreen com StateFlow ---
-    // 1. Efeito para carregar o livro se estivermos no modo de edição.
+    var hasLoaded by remember { mutableStateOf(false) }
+
     LaunchedEffect(livroId) {
         if (isEditing) {
             viewModel.getLivroById(livroId)
         }
     }
 
-    // 2. Observa o livro selecionado do ViewModel.
-    val livro by viewModel.selectedLivro.collectAsState()
+    val livroState by viewModel.selectedLivro.collectAsState()
+    val livro = livroState
 
-    // 3. Garante que o estado seja limpo ao sair da tela.
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.clearSelectedLivro()
-        }
-    }
-    // ---------------------------------------------------------------------
-
-    // Estados para os campos de entrada
     var titulo by remember { mutableStateOf("") }
     var autor by remember { mutableStateOf("") }
     var ano by remember { mutableStateOf("") }
     var genre by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var isLido by remember { mutableStateOf(false) }
-
     var isAttemptedSubmit by remember { mutableStateOf(false) }
 
-    // Efeito para sincronizar o estado local quando o livro for carregado (no modo de edição)
     LaunchedEffect(livro) {
-        if (isEditing && livro != null) {
-            titulo = livro!!.titulo
-            autor = livro!!.autor
-            ano = livro!!.anoPublicacao.toString()
-            genre = livro!!.genre
-            description = livro!!.description
-            isLido = livro!!.isLido
+        if (isEditing && livro != null && !hasLoaded) {
+            titulo = livro.titulo
+            autor = livro.autor
+            ano = livro.anoPublicacao.toString()
+            genre = livro.genre
+            description = livro.description
+            isLido = livro.isLido
+            hasLoaded = true
         }
     }
 
-    // --- Lógica de Validação (sem mudanças) ---
     val anoInt = ano.toIntOrNull()
-    val isAnoValid = anoInt != null && anoInt > 0 && ano.length == 4
-    val isTituloValid = titulo.isNotBlank()
-    val isAutorValid = autor.isNotBlank()
-    val isGenreValid = genre.isNotBlank()
-    val isDescriptionValid = description.isNotBlank()
-    val isFormValid = isTituloValid && isAutorValid && isGenreValid && isDescriptionValid && isAnoValid
-    // ---------------------------
+    val isAnoValid = anoInt != null && ano.length == 4
+    val isFormValid =
+        titulo.isNotBlank() &&
+                autor.isNotBlank() &&
+                genre.isNotBlank() &&
+                description.isNotBlank() &&
+                isAnoValid
 
     Scaffold(
         topBar = {
@@ -85,123 +71,139 @@ fun AddEditScreen(
                 title = { Text(if (isEditing) "Editar Livro" else "Novo Livro") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Voltar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 }
             )
         }
-    ) { paddingValues ->
-        // No modo de edição, se o livro ainda não foi carregado, mostra um spinner.
-        if (isEditing && livro == null) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    ) { padding ->
+
+        if (isEditing && !hasLoaded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
                 CircularProgressIndicator()
             }
-        } else {
-            // Mostra o formulário para adicionar um novo livro ou quando o livro para edição foi carregado.
-            FormContent(
-                paddingValues = paddingValues,
-                isEditing = isEditing,
-                isFormValid = isFormValid,
-                isAttemptedSubmit = isAttemptedSubmit,
-                titulo = titulo, onTituloChange = { titulo = it }, isTituloValid = isTituloValid,
-                autor = autor, onAutorChange = { autor = it }, isAutorValid = isAutorValid,
-                genre = genre, onGenreChange = { genre = it }, isGenreValid = isGenreValid,
-                ano = ano, onAnoChange = { if (it.length <= 4) ano = it.filter { char -> char.isDigit() } }, isAnoValid = isAnoValid,
-                description = description, onDescriptionChange = { description = it }, isDescriptionValid = isDescriptionValid,
-                isLido = isLido, onIsLidoChange = { isLido = it },
-                onSave = {
+            return@Scaffold
+        }
+
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            OutlinedTextField(
+                value = titulo,
+                onValueChange = { titulo = it },
+                label = { Text("Título") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = isAttemptedSubmit && titulo.isBlank()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = autor,
+                onValueChange = { autor = it },
+                label = { Text("Autor") },
+                modifier = Modifier.fillMaxWidth(),
+                isError = isAttemptedSubmit && autor.isBlank()
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            Row(Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = genre,
+                    onValueChange = { genre = it },
+                    label = { Text("Gênero") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 8.dp),
+                    isError = isAttemptedSubmit && genre.isBlank()
+                )
+
+                OutlinedTextField(
+                    value = ano,
+                    onValueChange = {
+                        if (it.length <= 4) ano = it.filter(Char::isDigit)
+                    },
+                    label = { Text("Ano") },
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(start = 8.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = isAttemptedSubmit && !isAnoValid
+                )
+            }
+
+            Spacer(Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Livro já lido?")
+                Switch(
+                    checked = isLido,
+                    onCheckedChange = { isLido = it }
+                )
+            }
+
+            Spacer(Modifier.height(24.dp))
+
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Descrição") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 160.dp),
+                isError = isAttemptedSubmit && description.isBlank()
+            )
+
+            Spacer(Modifier.height(32.dp))
+
+            Button(
+                onClick = {
                     isAttemptedSubmit = true
-                    if (isFormValid) {
-                        val livroParaSalvar = Livro(
+                    if (isFormValid && livro != null) {
+                        val livroSalvar = Livro(
                             id = if (isEditing) livroId else 0,
-                            usuarioId = livro?.usuarioId ?: viewModel.currentUserId,
+                            usuarioId = livro.usuarioId,
                             titulo = titulo,
                             autor = autor,
                             anoPublicacao = anoInt!!,
                             genre = genre,
                             description = description,
-                            isFavorito = livro?.isFavorito ?: false,
+                            isFavorito = livro.isFavorito,
                             isLido = isLido,
-                            imageUrl = if (isEditing) livro?.imageUrl else null
+                            imageUrl = livro.imageUrl
                         )
+
                         if (isEditing) {
-                            viewModel.atualizar(livroParaSalvar)
+                            viewModel.atualizar(livroSalvar)
                         } else {
-                            viewModel.inserir(livroParaSalvar)
+                            viewModel.inserir(livroSalvar)
                         }
+
                         navController.popBackStack()
                     }
-                }
-            )
-        }
-    }
-}
-
-
-// Composable auxiliar para o formulário, para manter o código principal mais limpo.
-@Composable
-private fun FormContent(
-    paddingValues: PaddingValues,
-    isEditing: Boolean,
-    isFormValid: Boolean,
-    isAttemptedSubmit: Boolean,
-    titulo: String, onTituloChange: (String) -> Unit, isTituloValid: Boolean,
-    autor: String, onAutorChange: (String) -> Unit, isAutorValid: Boolean,
-    genre: String, onGenreChange: (String) -> Unit, isGenreValid: Boolean,
-    ano: String, onAnoChange: (String) -> Unit, isAnoValid: Boolean,
-    description: String, onDescriptionChange: (String) -> Unit, isDescriptionValid: Boolean,
-    isLido: Boolean, onIsLidoChange: (Boolean) -> Unit,
-    onSave: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .padding(paddingValues)
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // (O conteúdo do seu formulário é colado aqui, sem alterações lógicas)
-        OutlinedTextField(
-            value = titulo, onValueChange = onTituloChange, label = { Text("Título") },
-            modifier = Modifier.fillMaxWidth(), isError = isAttemptedSubmit && !isTituloValid,
-            supportingText = { if (isAttemptedSubmit && !isTituloValid) Text("O título é obrigatório.") }
-        )
-        Spacer(Modifier.height(16.dp))
-        OutlinedTextField(
-            value = autor, onValueChange = onAutorChange, label = { Text("Autor") },
-            modifier = Modifier.fillMaxWidth(), isError = isAttemptedSubmit && !isAutorValid,
-            supportingText = { if (isAttemptedSubmit && !isAutorValid) Text("O autor é obrigatório.") }
-        )
-        Spacer(Modifier.height(16.dp))
-        Row(Modifier.fillMaxWidth()) {
-            OutlinedTextField(
-                value = genre, onValueChange = onGenreChange, label = { Text("Gênero") },
-                modifier = Modifier.weight(1f).padding(end = 8.dp), isError = isAttemptedSubmit && !isGenreValid,
-                supportingText = { if (isAttemptedSubmit && !isGenreValid) Text("Obrigatório.") }
-            )
-            OutlinedTextField(
-                value = ano, onValueChange = onAnoChange, label = { Text("Ano") },
-                modifier = Modifier.weight(1f).padding(start = 8.dp), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                isError = isAttemptedSubmit && !isAnoValid,
-                supportingText = { if (isAttemptedSubmit && !isAnoValid) Text("Ano inválido.") }
-            )
-        }
-        Spacer(Modifier.height(20.dp))
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("Livro já lido?", style = MaterialTheme.typography.titleMedium)
-            Switch(checked = isLido, onCheckedChange = onIsLidoChange)
-        }
-        Spacer(Modifier.height(24.dp))
-        OutlinedTextField(
-            value = description, onValueChange = onDescriptionChange, label = { Text("Descrição Completa") },
-            modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp), singleLine = false,
-            isError = isAttemptedSubmit && !isDescriptionValid,
-            supportingText = { if (isAttemptedSubmit && !isDescriptionValid) Text("A descrição é obrigatória.") }
-        )
-        Spacer(Modifier.height(32.dp))
-        Button(onClick = onSave, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-            Text(if (isEditing) "CONFIRMAR ATUALIZAÇÃO" else "SALVAR NOVO LIVRO")
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+            ) {
+                Text(if (isEditing) "CONFIRMAR ATUALIZAÇÃO" else "SALVAR NOVO LIVRO")
+            }
         }
     }
 }

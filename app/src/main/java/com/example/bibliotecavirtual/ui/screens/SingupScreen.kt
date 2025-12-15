@@ -102,7 +102,7 @@ fun SignupScreen(
             Spacer(Modifier.height(24.dp))
 
             TextButton(onClick = {
-                viewModel.clearError()
+                viewModel.clearUiState()
                 navController.popBackStack()
             }) {
                 Text("Já tenho conta")

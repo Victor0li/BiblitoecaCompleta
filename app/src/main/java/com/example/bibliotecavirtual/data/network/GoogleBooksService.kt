@@ -4,16 +4,13 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import com.google.gson.annotations.SerializedName
 
-// 1. Data classes para mapear a resposta simplificada da API do Google Books
-// A resposta é complexa, vamos mapear apenas o necessário (volumes -> items -> volumeInfo)
-
 data class VolumeInfo(
     val title: String,
     val authors: List<String>?,
     val description: String?,
     @SerializedName("publishedDate")
-    val anoPublicacao: String?, // Retorna como String "YYYY-MM-DD" ou apenas "YYYY"
-    val categories: List<String>?, // Pode ser usado como 'genre'
+    val anoPublicacao: String?,
+    val categories: List<String>?,
     val imageLinks: ImageLinks?
 )
 
@@ -30,11 +27,10 @@ data class ImageLinks(
     val thumbnail: String?
 )
 
-// 2. Interface Retrofit
+// Retrofit
 interface GoogleBooksService {
     @GET("volumes")
     suspend fun searchBooks(
-        // Query para buscar por ISBN: "isbn:SEU_ISBN"
         @Query("q") query: String
     ): BooksResponse
 }

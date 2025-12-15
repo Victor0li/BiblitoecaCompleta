@@ -6,7 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.* // Importa rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -20,20 +20,19 @@ import coil.compose.AsyncImage
 import com.example.bibliotecavirtual.ui.viewmodel.AuthViewModel
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.runtime.livedata.observeAsState
-import kotlinx.coroutines.launch // Importa launch
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LivroListScreen(
-    navController: NavHostController,      // Para navegação INTERNA
-    rootNavController: NavHostController,  // Para ações GLOBAIS (Logout)
+    navController: NavHostController,
+    rootNavController: NavHostController,
     viewModel: LivroViewModel,
     authViewModel: AuthViewModel
 ) {
     val livros by viewModel.allLivros.observeAsState(initial = emptyList())
     val currentUser by authViewModel.currentUser.collectAsState(initial = null)
 
-    // NOVO: Escopo de Coroutines para garantir a ordem das operações
     val scope = rememberCoroutineScope()
 
     Scaffold(
@@ -113,7 +112,6 @@ fun LivroListScreen(
     }
 }
 
-// ... (Restante do código do LivroCard)
 @Composable
 fun LivroCard(livro: Livro, onClick: () -> Unit) {
     ElevatedCard(

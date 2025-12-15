@@ -1,4 +1,3 @@
-// ARQUIVO ATUALIZADO: AppDatabase.kt
 package com.example.bibliotecavirtual.data.db
 
 import android.content.Context
@@ -27,7 +26,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "livro_database"
                 )
-                    // MIGRACAO DESTRUTIVA - NECESSARIO POR TER ALTERADO Livro.kt
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

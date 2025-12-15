@@ -21,8 +21,6 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.bibliotecavirtual.data.Livro
 import com.example.bibliotecavirtual.ui.viewmodel.LivroViewModel
-import androidx.compose.ui.res.painterResource
-import com.example.bibliotecavirtual.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,23 +29,17 @@ fun LivroDetailScreen(
     livroId: Int,
     viewModel: LivroViewModel
 ) {
-    // --- Lógica de Carregamento e Observação de Estado ---
-
-    // 1. Efeito para carregar o livro. É acionado sempre que livroId mudar.
     LaunchedEffect(livroId) {
         viewModel.getLivroById(livroId)
     }
 
-    // 2. Observa o estado do livro selecionado diretamente do ViewModel.
     val livro by viewModel.selectedLivro.collectAsState()
 
-    // 3. Efeito para limpar o estado quando a tela é descartada (o usuário sai dela).
     DisposableEffect(Unit) {
         onDispose {
             viewModel.clearSelectedLivro()
         }
     }
-    // -------------------------------------------------------------
 
     Scaffold(
         topBar = {
@@ -123,7 +115,6 @@ private fun DetalhesDoLivroContent(
             modifier = Modifier.fillMaxWidth(0.6f),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
         ) {
-            // --- CORREÇÃO DEFINITIVA APLICADA AQUI ---
             AsyncImage(
                 model = livro.imageUrl?.replace("http://", "https://"),
                 contentDescription = "Capa do Livro ${livro.titulo}",

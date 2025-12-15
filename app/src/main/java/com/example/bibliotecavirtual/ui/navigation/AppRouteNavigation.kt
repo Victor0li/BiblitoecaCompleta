@@ -72,7 +72,6 @@ fun AppRootNavigation(
         }
     }
 
-    // CONTROLE ÚNICO DE NAVEGAÇÃO GLOBAL
     LaunchedEffect(currentUserId) {
         if (currentUserId != null) {
             rootNavController.navigate("app_host") {

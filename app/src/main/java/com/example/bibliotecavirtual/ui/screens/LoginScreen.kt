@@ -86,7 +86,7 @@ fun LoginScreen(
             Spacer(Modifier.height(24.dp))
 
             TextButton(onClick = {
-                viewModel.clearError()
+                viewModel.clearUiState()
                 navController.navigate("signup")
             }) {
                 Text("Criar conta")

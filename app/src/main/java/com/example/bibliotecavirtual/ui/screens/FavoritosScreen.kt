@@ -18,13 +18,9 @@ import androidx.navigation.NavController
 import com.example.bibliotecavirtual.data.Livro
 import com.example.bibliotecavirtual.ui.viewmodel.LivroViewModel
 
-// O componente LivroCard (que agora inclui a imagem) será usado aqui.
-// O código completo do LivroCard está no LivroListScreen.kt
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritosScreen(navController: NavController, viewModel: LivroViewModel) {
-    // Observa apenas a lista de favoritos
     val livrosFavoritos by viewModel.favoritos.observeAsState(initial = emptyList())
 
     Scaffold(
@@ -41,17 +37,20 @@ fun FavoritosScreen(navController: NavController, viewModel: LivroViewModel) {
     ) { paddingValues ->
         if (livrosFavoritos.isEmpty()) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(paddingValues),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
                 Text("Nenhum livro marcado como favorito.")
             }
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(paddingValues)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
             ) {
                 items(livrosFavoritos, key = { it.id }) { livro ->
-                    // Usamos o LivroCard que já foi atualizado para exibir a imagem
                     LivroCard(
                         livro = livro,
                         onClick = { navController.navigate("detail/${livro.id}") }

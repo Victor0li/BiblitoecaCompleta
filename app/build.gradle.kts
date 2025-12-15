@@ -41,8 +41,6 @@ android {
 }
 
 dependencies {
-
-    // --- Dependências Atuais ---
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -54,11 +52,8 @@ dependencies {
     implementation(libs.androidx.compose.runtime.livedata)
     implementation(libs.androidx.compose.foundation)
 
-    // --- IMPORTANTE: Ícones extras para Compose ---
     implementation("androidx.compose.material:material-icons-extended")
 
-
-    // --- Versões (Para facilitar a gestão) ---
     val room_version = "2.6.1"
     val lifecycle_version = "2.7.0"
     val nav_version = "2.7.5"
@@ -89,7 +84,6 @@ dependencies {
     // 6. Coil - Carregamento de Imagem para Compose
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // --- Dependências de Teste ---
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

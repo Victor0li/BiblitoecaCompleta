@@ -1,4 +1,3 @@
-// NOVO ARQUIVO: AuthViewModelFactory.kt
 package com.example.bibliotecavirtual.ui.viewmodel
 
 import androidx.lifecycle.ViewModel

@@ -18,21 +18,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.bibliotecavirtual.data.Livro
 import com.example.bibliotecavirtual.ui.viewmodel.LivroViewModel
-import coil.compose.AsyncImage // NOVO IMPORT: COIL para imagens assíncronas
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(navController: NavController, viewModel: LivroViewModel) {
 
-    // 1. Observa o estado da pesquisa do ViewModel
     val searchedLivro by viewModel.searchedLivro.collectAsStateWithLifecycle()
     val isSearching by viewModel.isSearching.collectAsStateWithLifecycle()
     val errorMessage by viewModel.searchErrorMessage.collectAsStateWithLifecycle()
 
-    // Estado local para o campo de input
     var isbnInput by remember { mutableStateOf("") }
 
-    // Efeito para limpar o estado do ViewModel ao sair da tela (boas práticas)
     DisposableEffect(Unit) {
         onDispose {
             viewModel.clearSearchState()
@@ -90,13 +87,9 @@ fun SearchScreen(navController: NavController, viewModel: LivroViewModel) {
             Divider()
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- Exibição de Status / Resultado ---
-
             if (isSearching) {
-                // Indicador de Carregamento
                 CircularProgressIndicator()
             } else if (errorMessage != null) {
-                // Mensagem de Erro
                 Text(
                     text = errorMessage ?: "Erro desconhecido.",
                     color = MaterialTheme.colorScheme.error,
@@ -104,23 +97,20 @@ fun SearchScreen(navController: NavController, viewModel: LivroViewModel) {
                     modifier = Modifier.padding(16.dp)
                 )
             } else if (searchedLivro != null) {
-                // Resultado Encontrado
                 LivroSearchResult(
                     livro = searchedLivro!!,
                     onAddToShelf = {
                         viewModel.inserir(searchedLivro!!)
-                        navController.popBackStack() // Volta para a lista após adicionar
+                        navController.popBackStack()
                     }
                 )
             } else {
-                // Mensagem Inicial
                 Text("Digite o ISBN para buscar um livro.")
             }
         }
     }
 }
 
-// Componente para exibir o resultado da busca
 @Composable
 fun LivroSearchResult(livro: Livro, onAddToShelf: () -> Unit) {
     Card(
@@ -129,20 +119,18 @@ fun LivroSearchResult(livro: Livro, onAddToShelf: () -> Unit) {
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally // Centraliza a imagem e os elementos
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // NOVO: Exibindo a Imagem da Capa
             livro.imageUrl?.let { url ->
                 AsyncImage(
-                    model = url.replace("http://", "https://"), // Garante HTTPS (boa prática)
+                    model = url.replace("http://", "https://"),
                     contentDescription = "Capa do Livro ${livro.titulo}",
                     modifier = Modifier
-                        .size(height = 160.dp, width = 100.dp) // Define um tamanho vertical de capa
+                        .size(height = 160.dp, width = 100.dp)
                         .padding(bottom = 16.dp)
                 )
             } ?: run {
-                // Fallback se não houver URL de imagem
                 Icon(
                     Icons.Default.Book,
                     contentDescription = "Sem capa",
@@ -150,7 +138,6 @@ fun LivroSearchResult(livro: Livro, onAddToShelf: () -> Unit) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            // Fim da área da imagem
 
             Text(
                 "LIVRO ENCONTRADO",
@@ -174,7 +161,6 @@ fun LivroSearchResult(livro: Livro, onAddToShelf: () -> Unit) {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Detalhes rápidos
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 AssistChip(onClick = {}, label = { Text(livro.genre) })
                 AssistChip(onClick = {}, label = { Text(livro.anoPublicacao.toString()) })
@@ -183,14 +169,14 @@ fun LivroSearchResult(livro: Livro, onAddToShelf: () -> Unit) {
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                livro.description.take(200) + if (livro.description.length > 200) "..." else "", // Snippet
+                livro.description.take(200) + if (livro.description.length > 200) "..." else "",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botão de Adicionar
+
             Button(
                 onClick = onAddToShelf,
                 modifier = Modifier.fillMaxWidth().height(50.dp)

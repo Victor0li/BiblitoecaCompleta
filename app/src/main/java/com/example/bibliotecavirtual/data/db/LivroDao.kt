@@ -7,8 +7,6 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LivroDao {
 
-    // --- CONSULTAS (TODAS FILTRADAS POR usuarioId) ---
-
     // Retorna todos os livros do usuário logado
     @Query("SELECT * FROM tabela_livros WHERE usuarioId = :usuarioId ORDER BY titulo ASC")
     fun getAll(usuarioId: Long): Flow<List<Livro>>
@@ -30,16 +28,12 @@ interface LivroDao {
     fun getParaLer(usuarioId: Long): Flow<List<Livro>>
 
 
-    // --- OPERAÇÕES DE ESCRITA (O Livro já contém o usuarioId) ---
-
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun inserir(livro: Livro)
 
     @Delete
     suspend fun deletar(livro: Livro)
 
-    // Nota: O Room usa a Primary Key (id) para encontrar e atualizar.
-    // O Livro que é passado aqui DEVE conter o usuarioId correto.
     @Update
     suspend fun atualizar(livro: Livro)
 }
