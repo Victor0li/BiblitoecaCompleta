@@ -1,3 +1,4 @@
+// ARQUIVO ATUALIZADO: AppDatabase.kt
 package com.example.bibliotecavirtual.data.db
 
 import android.content.Context
@@ -5,12 +6,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.bibliotecavirtual.data.Livro
+import com.example.bibliotecavirtual.data.Usuario // NOVO IMPORT
 
-// VERSÃO CORRIGIDA PARA 3
-@Database(entities = [Livro::class], version = 3, exportSchema = false) // <--- MUDAR PARA 3
+@Database(
+    entities = [Livro::class, Usuario::class], version = 5, exportSchema = false
+)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun livroDao(): LivroDao
+    abstract fun usuarioDao(): UsuarioDao // NOVO DAO
 
     companion object {
         @Volatile
@@ -23,7 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "livro_database"
                 )
-                    // Esta linha garante que o banco de dados será apagado e recriado na mudança de versão.
+                    // MIGRACAO DESTRUTIVA - NECESSARIO POR TER ALTERADO Livro.kt
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance

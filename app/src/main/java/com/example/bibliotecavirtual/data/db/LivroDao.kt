@@ -7,20 +7,30 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface LivroDao {
 
-    @Query("SELECT * FROM tabela_livros ORDER BY titulo ASC")
-    fun getAll(): Flow<List<Livro>>
+    // --- CONSULTAS (TODAS FILTRADAS POR usuarioId) ---
 
-    @Query("SELECT * FROM tabela_livros WHERE isFavorito = 1 ORDER BY titulo ASC")
-    fun getFavorites(): Flow<List<Livro>>
+    // Retorna todos os livros do usuário logado
+    @Query("SELECT * FROM tabela_livros WHERE usuarioId = :usuarioId ORDER BY titulo ASC")
+    fun getAll(usuarioId: Long): Flow<List<Livro>>
 
-    @Query("SELECT * FROM tabela_livros WHERE id = :livroId")
-    fun getLivroById(livroId: Int): Flow<Livro?>
+    // Retorna apenas os favoritos do usuário
+    @Query("SELECT * FROM tabela_livros WHERE usuarioId = :usuarioId AND isFavorito = 1 ORDER BY titulo ASC")
+    fun getFavorites(usuarioId: Long): Flow<List<Livro>>
 
-    @Query("SELECT * FROM tabela_livros WHERE isLido = 1 ORDER BY titulo ASC")
-    fun getLidos(): Flow<List<Livro>>
+    // Retorna um livro específico do usuário (requer tanto o ID do livro quanto o ID do usuário)
+    @Query("SELECT * FROM tabela_livros WHERE id = :livroId AND usuarioId = :usuarioId")
+    fun getLivroById(livroId: Int, usuarioId: Long): Flow<Livro?>
 
-    @Query("SELECT * FROM tabela_livros WHERE isLido = 0 ORDER BY titulo ASC")
-    fun getParaLer(): Flow<List<Livro>>
+    // Retorna os livros já lidos do usuário
+    @Query("SELECT * FROM tabela_livros WHERE usuarioId = :usuarioId AND isLido = 1 ORDER BY titulo ASC")
+    fun getLidos(usuarioId: Long): Flow<List<Livro>>
+
+    // Retorna os livros para ler do usuário
+    @Query("SELECT * FROM tabela_livros WHERE usuarioId = :usuarioId AND isLido = 0 ORDER BY titulo ASC")
+    fun getParaLer(usuarioId: Long): Flow<List<Livro>>
+
+
+    // --- OPERAÇÕES DE ESCRITA (O Livro já contém o usuarioId) ---
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun inserir(livro: Livro)
@@ -28,6 +38,8 @@ interface LivroDao {
     @Delete
     suspend fun deletar(livro: Livro)
 
+    // Nota: O Room usa a Primary Key (id) para encontrar e atualizar.
+    // O Livro que é passado aqui DEVE conter o usuarioId correto.
     @Update
     suspend fun atualizar(livro: Livro)
 }

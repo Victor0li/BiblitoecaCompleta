@@ -6,39 +6,49 @@ import com.example.bibliotecavirtual.data.network.GoogleBooksService
 import com.example.bibliotecavirtual.data.network.Item
 import kotlinx.coroutines.flow.Flow
 
-// O Repository agora recebe o DAO (Room) e o Service (Retrofit)
+// ATUALIZADO: O Repository agora recebe o ID do usuário logado
 class LivroRepository(
     private val livroDao: LivroDao,
-    private val booksService: GoogleBooksService
+    private val booksService: GoogleBooksService,
+    private val currentUserId: Long // NOVO: ID do usuário logado no momento
 ) {
 
     // --- FUNÇÕES DE PERSISTÊNCIA (ROOM) ---
 
-    val allLivros: Flow<List<Livro>> = livroDao.getAll()
-    val favoritos: Flow<List<Livro>> = livroDao.getFavorites()
-    val lidos: Flow<List<Livro>> = livroDao.getLidos()
-    val paraLer: Flow<List<Livro>> = livroDao.getParaLer()
+    // Todas as chamadas ao DAO DEVEM incluir o currentUserId
+    val allLivros: Flow<List<Livro>> = livroDao.getAll(currentUserId)
+    val favoritos: Flow<List<Livro>> = livroDao.getFavorites(currentUserId)
+    val lidos: Flow<List<Livro>> = livroDao.getLidos(currentUserId)
+    val paraLer: Flow<List<Livro>> = livroDao.getParaLer(currentUserId)
 
-    fun getLivroById(id: Int): Flow<Livro?> = livroDao.getLivroById(id)
+    fun getLivroById(id: Int): Flow<Livro?> = livroDao.getLivroById(id, currentUserId)
+
+    // Nota: O objeto Livro passado para inserção/atualização/deleção JÁ DEVE conter o currentUserId.
 
     suspend fun inserir(livro: Livro) {
+        // Validação: Garante que o livro está sendo inserido com o ID do usuário correto
+        require(livro.usuarioId == currentUserId) { "O livro deve pertencer ao usuário logado." }
         livroDao.inserir(livro)
     }
 
     suspend fun deletar(livro: Livro) {
+        require(livro.usuarioId == currentUserId) { "O livro deve pertencer ao usuário logado." }
         livroDao.deletar(livro)
     }
 
     suspend fun atualizar(livro: Livro) {
+        require(livro.usuarioId == currentUserId) { "O livro deve pertencer ao usuário logado." }
         livroDao.atualizar(livro)
     }
 
     suspend fun toggleFavorito(livro: Livro) {
+        require(livro.usuarioId == currentUserId) { "O livro deve pertencer ao usuário logado." }
         val updatedLivro = livro.copy(isFavorito = !livro.isFavorito)
         livroDao.atualizar(updatedLivro)
     }
 
     suspend fun toggleLido(livro: Livro) {
+        require(livro.usuarioId == currentUserId) { "O livro deve pertencer ao usuário logado." }
         val updatedLivro = livro.copy(isLido = !livro.isLido)
         livroDao.atualizar(updatedLivro)
     }
@@ -47,28 +57,26 @@ class LivroRepository(
 
     /**
      * Mapeia o item da API do Google Books para a entidade Livro local.
+     * ADICIONA O currentUserId OBRIGATORIAMENTE.
      */
     private fun mapApiItemToLivro(item: Item): Livro {
         val volumeInfo = item.volumeInfo
 
-        // Determinar o gênero
         val genre = volumeInfo.categories?.firstOrNull() ?: "Não especificado"
-
-        // Determinar o ano (usando apenas os primeiros 4 dígitos)
         val ano = volumeInfo.anoPublicacao?.substringBefore('-')?.toIntOrNull() ?: 0
-
         val imageUrl = item.volumeInfo.imageLinks?.thumbnail
 
-        // Retorna o objeto Livro, com ID=0 para que o Room o gere na inserção
+        // ATUALIZADO: Agora injeta o ID do usuário logado
         return Livro(
             id = 0,
+            usuarioId = currentUserId, // <--- CAMPO ESSENCIAL ADICIONADO AQUI
             titulo = volumeInfo.title ?: "Título Desconhecido",
             autor = volumeInfo.authors?.joinToString(", ") ?: "Autor Desconhecido",
             genre = genre,
             anoPublicacao = ano,
             description = volumeInfo.description ?: "Sem descrição disponível.",
-            isFavorito = false, // Status padrão
-            isLido = false,       // Status padrão
+            isFavorito = false,
+            isLido = false,
             imageUrl = imageUrl
         )
     }
@@ -78,20 +86,17 @@ class LivroRepository(
      * @return Livro? Mapeado para a entidade local, ou null se não for encontrado.
      */
     suspend fun searchBookByIsbn(isbn: String): Livro? {
-        // A API de Volumes usa o parâmetro 'q' no formato "isbn:SEU_ISBN"
         val query = "isbn:$isbn"
 
         return try {
             val response = booksService.searchBooks(query)
 
-            // Se a busca retornar itens e o primeiro for válido
             if (response.totalItems > 0 && !response.items.isNullOrEmpty()) {
                 mapApiItemToLivro(response.items.first())
             } else {
-                null // Livro não encontrado
+                null
             }
         } catch (e: Exception) {
-            // Logar a exceção ou lidar com falhas de rede
             println("Erro ao buscar livro na API: ${e.message}")
             e.printStackTrace()
             null
